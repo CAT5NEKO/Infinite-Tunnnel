@@ -9,8 +9,8 @@ const ARCH_RADIAL_DIVISIONS = 24
 const BASE_FOV = 82
 const NEAR_PLANE = 0.1
 const FAR_PLANE = 3000
-const LIGHT_COUNT = 20
-const AMBIENT_INTENSITY = 0.35
+const LIGHT_COUNT = 140
+const AMBIENT_INTENSITY = 0.20
 const DRIVER_HEIGHT_FROM_FLOOR = 1.35
 const TUNNEL_CONTROL_POINTS = 22
 const LOOP_RADIUS = 220
@@ -48,26 +48,25 @@ const TUNNEL_FRAGMENT_SHADER = `
     float tile = tilePattern(vUv, 6.0, 70.0);
 
     float scrollV = vUv.y + uTime * uSpeed * 0.20;
-    float lightFreq = 5.5;
-    float lightBand = fract(scrollV * lightFreq);
-    float lightStrip = smoothstep(0.44, 0.50, lightBand) * (1.0 - smoothstep(0.50, 0.56, lightBand));
+    float lightBand = fract(scrollV * 6.6);
+    float sodiumStrip = smoothstep(0.44, 0.50, lightBand) * (1.0 - smoothstep(0.50, 0.56, lightBand));
 
     vec3 inwardNormal = normalize(vNormal);
-    float topness = clamp(inwardNormal.y * 0.5 + 0.5, 0.0, 1.0);
-    lightStrip *= (0.5 + topness * 0.5);
 
     vec3 baseColor = vec3(0.30, 0.30, 0.32);
     float stain = hash(vUv * 5.3) * 0.05 - 0.025;
     baseColor += stain;
 
     vec3 tileColor = mix(baseColor * 0.62, baseColor, tile);
-    vec3 ledLight = vec3(0.88, 0.95, 1.0) * lightStrip * 2.6;
-    vec3 ambientLed = vec3(0.06, 0.08, 0.13) * 0.4;
+    float sodiumFallR = smoothstep(0.07, 0.0, abs(vUv.x - 0.20));
+    float sodiumFallL = smoothstep(0.07, 0.0, abs(vUv.x - 0.80));
+    vec3 sodiumLight = vec3(1.0, 0.60, 0.06) * (sodiumFallR + sodiumFallL) * sodiumStrip * 3.0;
+    vec3 sodiumAmbient = vec3(0.18, 0.09, 0.01) * 0.50;
 
     float rim = pow(max(0.0, 1.0 - abs(dot(inwardNormal, normalize(-vPosition)))), 2.2);
-    vec3 rimColor = vec3(0.4, 0.55, 0.8) * rim * 0.14;
+    vec3 rimColor = vec3(0.55, 0.35, 0.08) * rim * 0.12;
 
-    vec3 finalColor = tileColor + ledLight + ambientLed + rimColor;
+    vec3 finalColor = tileColor + sodiumLight + sodiumAmbient + rimColor;
     gl_FragColor = vec4(finalColor, 1.0);
   }
 `
@@ -106,9 +105,9 @@ const ROAD_FRAGMENT_SHADER = `
     float edgeLine = step(0.44, centerDist) * step(centerDist, 0.495);
     asphalt = mix(asphalt, vec3(0.82, 0.78, 0.72), edgeLine * 0.75);
 
-    float lightBand = fract(scrollV * 5.5);
+    float lightBand = fract(scrollV * 6.6);
     float reflection = smoothstep(0.44, 0.50, lightBand) * (1.0 - smoothstep(0.50, 0.56, lightBand));
-    asphalt += vec3(0.12, 0.09, 0.03) * reflection * 0.6;
+    asphalt += vec3(0.22, 0.12, 0.02) * reflection * 0.80;
 
     gl_FragColor = vec4(asphalt, 1.0);
   }
@@ -187,10 +186,10 @@ export class TunnelRenderer implements TunnelRendererDriver {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight)
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
-    this.renderer.toneMappingExposure = 0.95
+    this.renderer.toneMappingExposure = 0.72
 
     this.scene = new THREE.Scene()
-    this.scene.fog = new THREE.FogExp2(0x030508, 0.010)
+    this.scene.fog = new THREE.FogExp2(0x040200, 0.010)
 
     this.camera = new THREE.PerspectiveCamera(BASE_FOV, canvas.clientWidth / canvas.clientHeight, NEAR_PLANE, FAR_PLANE)
 
@@ -203,7 +202,7 @@ export class TunnelRenderer implements TunnelRendererDriver {
     this.buildTunnelLights()
     this.buildPostProcessQuad(canvas.clientWidth, canvas.clientHeight)
 
-    const ambientLight = new THREE.AmbientLight(0x1a0e04, AMBIENT_INTENSITY)
+    const ambientLight = new THREE.AmbientLight(0x110902, AMBIENT_INTENSITY)
     this.scene.add(ambientLight)
   }
 
@@ -331,39 +330,46 @@ export class TunnelRenderer implements TunnelRendererDriver {
     if (!this.scene || !this.tunnelCurve || !this.tunnelFrames) return
 
     const { tangents: ft } = this.tunnelFrames
-    const stripPositions: number[] = []
-    const stripColors: number[] = []
     const STRIP_HALF = 0.55
-    const CROWN_SCALE = 0.86
+    const THETA_R = Math.PI / 5
+    const THETA_L = (4 * Math.PI) / 5
+    const SODIUM_SCALE = 0.90
+    const sodiumPositions: number[] = []
+    const sodiumColors: number[] = []
 
     for (let index = 0; index < LIGHT_COUNT; index++) {
       const t = index / LIGHT_COUNT
       const frameIdx = Math.min(Math.round(t * ARCH_SEGMENTS), ARCH_SEGMENTS)
-      const point = this.tunnelCurve.getPoint(t)
+      const point = this.tunnelCurve!.getPoint(t)
       const tang = ft[frameIdx]!
-      const { up } = this.groundedFrame(tang)
-      const cx = point.x + up.x * ARCH_HEIGHT * CROWN_SCALE
-      const cy = point.y + up.y * ARCH_HEIGHT * CROWN_SCALE
-      const cz = point.z + up.z * ARCH_HEIGHT * CROWN_SCALE
-      stripPositions.push(
-        cx - tang.x * STRIP_HALF, cy - tang.y * STRIP_HALF, cz - tang.z * STRIP_HALF,
-        cx + tang.x * STRIP_HALF, cy + tang.y * STRIP_HALF, cz + tang.z * STRIP_HALF
-      )
-      const brightness = 0.82 + Math.random() * 0.18
-      stripColors.push(
-        0.88 * brightness, 0.95 * brightness, 1.0 * brightness,
-        0.88 * brightness, 0.95 * brightness, 1.0 * brightness
-      )
+      const { right, up } = this.groundedFrame(tang)
+
+      for (const theta of [THETA_R, THETA_L]) {
+        const cr = Math.cos(theta) * TUNNEL_RADIUS * SODIUM_SCALE
+        const cu = Math.sin(theta) * ARCH_HEIGHT * SODIUM_SCALE
+        const cx = point.x + right.x * cr + up.x * cu
+        const cy = point.y + right.y * cr + up.y * cu
+        const cz = point.z + right.z * cr + up.z * cu
+        sodiumPositions.push(
+          cx - tang.x * STRIP_HALF, cy - tang.y * STRIP_HALF, cz - tang.z * STRIP_HALF,
+          cx + tang.x * STRIP_HALF, cy + tang.y * STRIP_HALF, cz + tang.z * STRIP_HALF
+        )
+        const b = 0.85 + Math.random() * 0.15
+        sodiumColors.push(
+          1.0 * b, 0.60 * b, 0.06 * b,
+          1.0 * b, 0.60 * b, 0.06 * b
+        )
+      }
     }
 
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(stripPositions), 3))
-    geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(stripColors), 3))
-    this.tunnelLights = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
-      vertexColors: true, transparent: true, opacity: 0.95,
+    const sodiumGeo = new THREE.BufferGeometry()
+    sodiumGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(sodiumPositions), 3))
+    sodiumGeo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(sodiumColors), 3))
+    this.tunnelLights = new THREE.LineSegments(sodiumGeo, new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 1.0,
       blending: THREE.AdditiveBlending, depthWrite: false,
     }))
-    this.scene.add(this.tunnelLights)
+    this.scene!.add(this.tunnelLights)
   }
 
   private buildPostProcessQuad(width: number, height: number): void {
