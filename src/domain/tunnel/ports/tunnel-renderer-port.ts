@@ -1,6 +1,6 @@
-import type { CameraState, SpeedEffectParams } from "@/shared/types/tunnel-types"
+import type { CameraState, SpeedEffectParams } from "@/domain/tunnel/tunnel-value-types"
 
-export interface TunnelRendererDriver {
+export interface TunnelRendererPort {
   initialize(canvas: HTMLCanvasElement): void
   renderFrame(cameraState: CameraState, speedEffectParams: SpeedEffectParams, progressRatio: number): void
   resize(width: number, height: number): void

@@ -1,4 +1,4 @@
-import type { Vector3D } from "@/shared/types/tunnel-types"
+import type { Vector3D } from "@/domain/tunnel/tunnel-value-types"
 
 const SPREAD_XY = 60
 const SPREAD_Z = 120
@@ -29,7 +29,6 @@ function catmullRomPoint(
 ): Vector3D {
   const t2 = t * t
   const t3 = t2 * t
-
   const calculate = (a: number, b: number, c: number, d: number): number =>
     0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3)
 
@@ -60,7 +59,7 @@ export function sampleSplinePath(controlPoints: Vector3D[], sampleCount: number)
   return points
 }
 
-export function buildTunnelPath(segmentCount: number): Vector3D[] {
+export function buildSplinePath(segmentCount: number): Vector3D[] {
   const controlPoints = generateRandomControlPoints(Math.ceil(segmentCount / 8) + 2)
   return sampleSplinePath(controlPoints, segmentCount)
 }

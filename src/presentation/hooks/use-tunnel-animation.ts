@@ -1,16 +1,13 @@
 import { useRef, useEffect } from "react"
-import { TunnelSceneService } from "@/application/tunnel-scene-service"
+import type { RefObject } from "react"
+import { TunnelSceneService } from "@/application/tunnel-scene/tunnel-scene-service"
 import { TunnelRenderer } from "@/infrastructure/webgl/tunnel-renderer"
+import type { TunnelConfig } from "@/application/tunnel-scene/tunnel-scene-types"
 
-const TUNNEL_CONFIG = {
-  speedKmh: 500,
-  tunnelRadius: 8,
-  segmentCount: 512,
-  pathLengthMeters: 2400,
-}
-
-export function TunnelCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+export function useTunnelAnimation(
+  canvasRef: RefObject<HTMLCanvasElement | null>,
+  config: TunnelConfig
+): void {
   const serviceRef = useRef<TunnelSceneService | null>(null)
   const animationIdRef = useRef<number | null>(null)
   const startTimeRef = useRef<number | null>(null)
@@ -20,26 +17,17 @@ export function TunnelCanvas() {
     if (!canvas) return
 
     const renderer = new TunnelRenderer()
-    const service = new TunnelSceneService(renderer, TUNNEL_CONFIG)
+    const service = new TunnelSceneService(renderer, config)
     serviceRef.current = service
-
     service.initializeWithCanvas(canvas)
 
-    const handleResize = () => {
-      service.resize(window.innerWidth, window.innerHeight)
-    }
+    const handleResize = () => service.resize(window.innerWidth, window.innerHeight)
     window.addEventListener("resize", handleResize)
 
     const runLoop = (timestamp: number) => {
       if (startTimeRef.current === null) startTimeRef.current = timestamp
       const elapsedSeconds = (timestamp - startTimeRef.current) / 1000
-
-      service.advanceFrame({
-        elapsedSeconds,
-        deltaSeconds: 0.016,
-        progressRatio: 0,
-      })
-
+      service.advanceFrame({ elapsedSeconds, deltaSeconds: 0.016, progressRatio: 0 })
       animationIdRef.current = requestAnimationFrame(runLoop)
     }
 
@@ -52,14 +40,7 @@ export function TunnelCanvas() {
       serviceRef.current = null
       startTimeRef.current = null
     }
+  // config は起動時に1度だけ読むため deps から除外
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 w-screen h-screen block"
-      width={window.innerWidth}
-      height={window.innerHeight}
-    />
-  )
 }

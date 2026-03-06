@@ -1,0 +1,12 @@
+export const ARCH_SEGMENTS = 600
+export const ARCH_RADIAL_DIVISIONS = 24
+export const TUNNEL_RADIUS = 5.8
+export const ARCH_HEIGHT = 8.5
+export const BASE_FOV = 82
+export const NEAR_PLANE = 0.1
+export const FAR_PLANE = 3000
+export const AMBIENT_INTENSITY = 0.20
+export const DRIVER_HEIGHT_FROM_FLOOR = 1.35
+export const LIGHT_COUNT = 140
+export const TUNNEL_CONTROL_POINTS = 22
+export const LOOP_RADIUS = 220

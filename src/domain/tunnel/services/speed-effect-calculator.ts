@@ -1,4 +1,4 @@
-import type { SpeedEffectParams } from "@/shared/types/tunnel-types"
+import type { SpeedEffectParams } from "@/domain/tunnel/tunnel-value-types"
 
 const BASE_MOTION_BLUR = 0.65
 const BASE_FOV_DELTA = 14

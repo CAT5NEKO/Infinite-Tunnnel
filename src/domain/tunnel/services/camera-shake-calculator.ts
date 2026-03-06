@@ -1,4 +1,4 @@
-import type { CameraState, ShakeIntensity, Vector3D } from "@/shared/types/tunnel-types"
+import type { CameraState, ShakeIntensity, Vector3D } from "@/domain/tunnel/tunnel-value-types"
 
 const SHAKE_FREQUENCY_FAST = 1.7
 const SHAKE_FREQUENCY_SLOW = 0.4
@@ -10,7 +10,11 @@ function smoothNoise(seed: number, time: number, frequency: number): number {
   return Math.sin(phase) * 0.6 + Math.sin(phase * 2.3 + 1.1) * 0.3 + Math.sin(phase * 5.1 + 2.4) * 0.1
 }
 
-function calculateShakeOffset(elapsedSeconds: number, axisSeeds: [number, number, number], shakeIntensity: ShakeIntensity): Vector3D {
+function calculateShakeOffset(
+  elapsedSeconds: number,
+  axisSeeds: [number, number, number],
+  shakeIntensity: ShakeIntensity
+): Vector3D {
   return {
     x: (
       smoothNoise(axisSeeds[0], elapsedSeconds, SHAKE_FREQUENCY_SLOW) * 0.5 +
@@ -39,7 +43,6 @@ export function calculateCameraShake(
     positionScale: shakeIntensity.rotationScale,
     rotationScale: shakeIntensity.rotationScale,
   })
-
   const rollAngleDelta = smoothNoise(7.0, elapsedSeconds, ROLL_FREQUENCY) * shakeIntensity.rotationScale * 0.04
 
   return {

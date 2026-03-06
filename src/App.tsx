@@ -1,4 +1,4 @@
-import { TunnelCanvas } from "@/components/tunnel-canvas"
+import { TunnelCanvas } from "@/presentation/components/tunnel-canvas/tunnel-canvas"
 
 export default function App() {
   return (

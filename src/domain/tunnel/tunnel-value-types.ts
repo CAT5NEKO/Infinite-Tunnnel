@@ -11,19 +11,6 @@ export type CameraState = {
   rollAngle: number
 }
 
-export type TunnelConfig = {
-  speedKmh: number
-  tunnelRadius: number
-  segmentCount: number
-  pathLengthMeters: number
-}
-
-export type AnimationFrameState = {
-  elapsedSeconds: number
-  deltaSeconds: number
-  progressRatio: number
-}
-
 export type ShakeIntensity = {
   positionScale: number
   rotationScale: number
