@@ -1,6 +1,6 @@
 [build]
   publish = "dist"
-  command = "pnpm run build"
+  command = "pnpm install --frozen-lockfile && pnpm run build"
 
 [dev]
   command = "pnpm run dev"
@@ -13,3 +13,4 @@
 
 [build.environment]
   NODE_VERSION = "24"
+  PNPM_VERSION = "10.30.1"
