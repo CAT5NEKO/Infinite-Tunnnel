@@ -1,16 +1,16 @@
 [build]
-  publish = "dist"
-  command = "pnpm install --frozen-lockfile && pnpm run build"
+publish = "dist"
+command = "pnpm install --frozen-lockfile && pnpm run build"
 
 [dev]
-  command = "pnpm run dev"
-  port = 5173
+command = "pnpm run dev"
+port = 5173
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200
 
 [build.environment]
-  NODE_VERSION = "24"
-  PNPM_VERSION = "10.30.1"
+NODE_VERSION = "24"
+PNPM_VERSION = "10.30.1"

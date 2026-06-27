@@ -6,7 +6,7 @@ export const ROAD_VERTEX_SHADER = `
     vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`
+`;
 
 export const ROAD_FRAGMENT_SHADER = `
   uniform float uTime;
@@ -38,4 +38,4 @@ export const ROAD_FRAGMENT_SHADER = `
 
     gl_FragColor = vec4(asphalt, 1.0);
   }
-`
+`;

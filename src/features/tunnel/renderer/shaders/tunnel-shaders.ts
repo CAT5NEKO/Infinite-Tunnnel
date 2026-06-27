@@ -8,7 +8,7 @@ export const TUNNEL_VERTEX_SHADER = `
     vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`
+`;
 
 export const TUNNEL_FRAGMENT_SHADER = `
   uniform float uTime;
@@ -52,4 +52,4 @@ export const TUNNEL_FRAGMENT_SHADER = `
     vec3 finalColor = tileColor + sodiumLight + sodiumAmbient + rimColor;
     gl_FragColor = vec4(finalColor, 1.0);
   }
-`
+`;

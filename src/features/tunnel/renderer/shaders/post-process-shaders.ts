@@ -4,7 +4,7 @@ export const POST_VERTEX_SHADER = `
     vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`
+`;
 
 export const POST_FRAGMENT_SHADER = `
   uniform sampler2D uSceneTexture;
@@ -49,4 +49,4 @@ export const POST_FRAGMENT_SHADER = `
 
     gl_FragColor = vec4(color, 1.0);
   }
-`
+`;
